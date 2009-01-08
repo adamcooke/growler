@@ -17,11 +17,7 @@ $ips = Array('10.0.0.1', '10.0.0.2');
 $data = stripslashes($_POST['payload']);
 $payload = json_decode($data);
 
-if($payload->repository->project == '') {
-  $app = $payload->repository->name;
-} else {
-  $app = $payload->repository->project;
-}
+$repository = $payload->repository->name;
 
 foreach($payload->commits as $commit) {
 
@@ -29,7 +25,7 @@ foreach($payload->commits as $commit) {
   $commit_message = $commit->message;
 
   $title = "$author committed";
-  $message =  "to $app\n\n$commit_message";
+  $message =  "to $repository\n\n$commit_message";
 
   foreach($ips as $ip) {
     system("mumbles-send -g $ip '$title' '$message'");
