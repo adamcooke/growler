@@ -1,23 +1,36 @@
 <?php
-
-$data = stripslashes($_POST['payload']);
-
-if(!isset($_POST['payload'])) { 
-  $data = file_get_contents('data.txt');
-}
-
-$payload = json_decode($data);
-
-$author = $payload->commits[0]->author->name;
-$app = $payload->repository->name;
-$message = $payload->commits[0]->message;
-
-$message =  "$author pushed: \n" . "$message \nto $app";
-$title = 'codebase';
+/*
+ * Codebase Growler Post-Receive Hook
+ * 
+ * Dependency: mumbles - http://www.mumbles-project.org
+ * 
+ * - Install this script onto a web server and setup a post-receive hook within
+ *   codebase to call the script - http://myinternalserver.domain.com/growler.php.
+ *
+ * - Assign the IP addresses of the machines which should receive your growl whenever
+ *   a push is received by codebase into the $ips array below.
+ * 
+*/
 
 $ips = Array('10.0.0.1', '10.0.0.2');
-foreach($ips as $ip) { 
-  system("mumbles-send -g $ip '$title' '$message'");
+
+$data = stripslashes($_POST['payload']);
+$payload = json_decode($data);
+
+$app = $payload->repository->project;
+
+foreach($payload->commits as $commit) {
+
+  $author = $commit->author->name;
+  $commit_message = $commit->message;
+
+  $title = "$author committed";
+  $message =  "to $app\n\n$commit_message";
+
+  foreach($ips as $ip) {
+    system("mumbles-send -g $ip '$title' '$message'");
+  }
+
 }
 
 ?>
